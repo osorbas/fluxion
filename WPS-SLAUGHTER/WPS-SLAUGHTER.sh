@@ -157,7 +157,64 @@ sudo ifconfig $WIFI_MONITOR1 up
 
 eval $(sudo iwlist $WIFI_MONITOR1 scan | awk '/Address|ESSID|Channel:/' | sed 's/"//g' | sed 's/          Cell 01 - Address: /BSSID1=/g' | sed 's/          Cell 02 - Address: /BSSID2=/g' | sed 's/          Cell 03 - Address: /BSSID3=/g' | sed 's/          Cell 04 - Address: /BSSID4=/g' | sed 's/          Cell 05 - Address: /BSSID5=/g' | sed 's/          Cell 06 - Address: /BSSID6=/g' | sed 's/          Cell 07 - Address: /BSSID7=/g' | sed 's/          Cell 08 - Address: /BSSID8=/g' | sed 's/          Cell 09 - Address: /BSSID9=/g' | sed 's/          Cell 10 - Address: /BSSID10=/g' | sed 's/          Cell 11 - Address: /BSSID11=/g' | sed 's/          Cell 12 - Address: /BSSID12=/g' | sed 's/          Cell 13 - Address: /BSSID13=/g' | sed 's/          Cell 14 - Address: /BSSID14=/g' | sed 's/          Cell 15 - Address: /BSSID15=/g' | sed 's/          Cell 16 - Address: /BSSID16=/g' | sed 's/          Cell 17 - Address: /BSSID17=/g' | sed 's/          Cell 18 - Address: /BSSID18=/g' | sed 's/          Cell 19 - Address: /BSSID19=/g' | sed 's/          Cell 20 - Address: /BSSID20=/g'  | sed '2s/                    Channel:/CHANNEL1=/g' | sed '5s/                    Channel:/CHANNEL2=/g' | sed '8s/                    Channel:/CHANNEL3=/g' | sed '11s/                    Channel:/CHANNEL4=/g' | sed '14s/                    Channel:/CHANNEL5=/g' | sed '17s/                    Channel:/CHANNEL6=/g' | sed '20s/                    Channel:/CHANNEL7=/g' | sed '23s/                    Channel:/CHANNEL8=/g' | sed '26s/                    Channel:/CHANNEL9=/g' | sed '29s/                    Channel:/CHANNEL10=/g' | sed '32s/                    Channel:/CHANNEL11=/g' |sed '35s/                    Channel:/CHANNEL12=/g' | sed '38s/                    Channel:/CHANNEL13=/g' | sed '41s/                    Channel:/CHANNEL14=/g' | sed '44s/                    Channel:/CHANNEL15=/g' | sed '47s/                    Channel:/CHANNEL16=/g' | sed '50s/                    Channel:/CHANNEL17=/g' | sed '53s/                    Channel:/CHANNEL18=/g' | sed '56s/                    Channel:/CHANNEL19=/g' | sed '59s/                    Channel:/CHANNEL20=/g' | sed '3s/                    ESSID:/ESSID1=/g' | sed '6s/                    ESSID:/ESSID2=/g' | sed '9s/                    ESSID:/ESSID3=/g' | sed '12s/                    ESSID:/ESSID4=/g' | sed '15s/                    ESSID:/ESSID5=/g' | sed '18s/                    ESSID:/ESSID6=/g' | sed '21s/                    ESSID:/ESSID7=/g' | sed '24s/                    ESSID:/ESSID8=/g' | sed '27s/                    ESSID:/ESSID9=/g' | sed '30s/                    ESSID:/ESSID10=/g' | sed '33s/                    ESSID:/ESSID11=/g' | sed '36s/                    ESSID:/ESSID12=/g' | sed '39s/                    ESSID:/ESSID13=/g' | sed '42s/                    ESSID:/ESSID14=/g' | sed '45s/                    ESSID:/ESSID15=/g' | sed '48s/                    ESSID:/ESSID16=/g' | sed '51s/                    ESSID:/ESSID17=/g' | sed '54s/                    ESSID:/ESSID18=/g' | sed '57s/                    ESSID:/ESSID19=/g' | sed '60s/                    ESSID:/ESSID20=/g')
 
-wps-wifi-monitor
+
+	LINEAS_WIFIS_CSV=`wc -l $DUMP_PATH/$CSVDB | awk '{print $1}'`
+	
+	if [ $LINEAS_WIFIS_CSV -le 3 ]; then
+		deltax && break
+	fi
+	
+	linap=`cat $DUMP_PATH/$CSVDB | egrep -a -n '(Station|Cliente)' | awk -F : '{print $1}'`
+	linap=`expr $linap - 1`
+	head -n $linap $DUMP_PATH/$CSVDB &> $DUMP_PATH/dump-02.csv 
+	tail -n +$linap $DUMP_PATH/$CSVDB &> $DUMP_PATH/clientes.csv 
+	echo "                        WIFI LIST "
+	echo ""
+	echo " #      MAC                      CHAN    SECU     PWR    ESSID"
+	echo ""
+	i=0
+	
+	while IFS=, read MAC FTS LTS CHANNEL SPEED PRIVACY CYPHER AUTH POWER BEACON IV LANIP IDLENGTH ESSID KEY;do 
+		longueur=${#MAC}
+		PRIVACY=$(echo $PRIVACY| tr -d "^ ")
+		PRIVACY=${PRIVACY:0:4}
+		if [ $longueur -ge 17 ]; then
+			i=$(($i+1))
+			POWER=`expr $POWER + 100`
+			CLIENTE=`cat $DUMP_PATH/clientes.csv | grep $MAC`
+			
+			if [ "$CLIENTE" != "" ]; then
+				CLIENTE="*" 
+			fi
+			
+			echo -e " ""$green "$i")"$white"$CLIENTE\t""$yellow"$MAC"\t""$green "$CHANNEL"\t""$red" $PRIVACY"\t  ""$yellow"$POWER%"\t""$green "$ESSID""$transparent""
+			aidlenght=$IDLENGTH
+			assid[$i]=$ESSID
+			achannel[$i]=$CHANNEL
+			amac[$i]=$MAC
+			aprivacy[$i]=$PRIVACY
+			aspeed[$i]=$SPEED
+		fi
+	done < $DUMP_PATH/dump-02.csv
+	echo
+	echo -e ""$green "("$white"*"$green ")Active clients"$transparent""
+	echo ""
+	echo "        Select Target              "
+	echo -n "      #> "
+	read choice
+	idlenght=${aidlenght[$choice]}
+	ssid=${assid[$choice]}
+	channel=$(echo ${achannel[$choice]}|tr -d [:space:])
+	mac=${amac[$choice]}
+	privacy=${aprivacy[$choice]}
+	speed=${aspeed[$choice]}
+	Host_IDL=$idlength
+	Host_SPEED=$speed
+	Host_ENC=$privacy
+	Host_MAC=$mac
+	Host_CHAN=$channel
+	acouper=${#ssid}
+	fin=$(($acouper-idlength))
 
 read a
 case $a in
