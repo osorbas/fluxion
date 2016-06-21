@@ -3416,7 +3416,7 @@ function webinterface {
 			echo -e "$blue""11)"$transparent" Vodafone    [ESP]"
 			echo -e "$blue""12)"$transparent" Italian     [IT]"
 			echo -e "$blue""13)"$transparent" French      [FR]"
-			echo -e "$blue""13)"$transparent" Portuguese  [POR]"
+			echo -e "$blue""14)"$transparent" Portuguese  [POR]"
 			echo -e "$blue""15)"$transparent" German      [GER]"
 			echo -e "$blue""15)"$transparent"\e[1;31mBack"$transparent""
 			echo
